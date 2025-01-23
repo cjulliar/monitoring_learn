@@ -181,7 +181,7 @@ Les dashboards Grafana sont configurés dans `grafana/provisioning/`. Les métri
 
 4. **Consulter les rapports Evidently** :
    - Ouvre les fichiers `monitoring_ml/file2.html` et `monitoring_ml/o_drift.html` dans un navigateur pour visualiser les analyses.
-![Dashboard Grafana](<Capture d’écran 2025-01-22 à 12.31.27.png>)
+![Dashboard Grafana](<Dashboard Grafana.png>)
 ---
 
 ## **Astuces de dépannage**
