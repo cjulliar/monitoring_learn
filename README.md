@@ -1,211 +1,178 @@
-# Monitoring d’une application avec Evidently AI, Prometheus, et Grafana
+# Monitoring d'une application ML avec Evidently AI, Prometheus, et Grafana
 
-## **Description du projet**
+## Description du projet
 
-Ce projet vise à démontrer la robustesse d'une API de prédiction basée sur un modèle de machine learning grâce à un système complet de monitoring. Il intègre les outils suivants :
+Ce projet démontre la mise en place d'un système complet de monitoring pour une API de prédiction ML. Il utilise le dataset Wine de scikit-learn et intègre :
 
-- **Evidently AI** pour surveiller les performances du modèle et détecter les dérives (data drift, concept drift, target drift).
-- **Prometheus** pour collecter des métriques sur l’API et l’infrastructure.
-- **Grafana** pour visualiser ces métriques dans des tableaux de bord interactifs.
+- Une **API FastAPI** pour les prédictions
+- **Evidently AI** pour la détection des dérives (data drift, concept drift)
+- **Prometheus** pour la collecte des métriques
+- **Grafana** pour la visualisation des performances
 
-Ce README explique comment déployer et utiliser le projet.
-
----
-
-## **Prérequis**
-
-- **Docker** et **Docker Compose** installés sur votre machine.
-- Python 3.8 ou une version supérieure si vous souhaitez exécuter les scripts Python localement.
-
----
-
-## **Structure du projet**
+## Architecture
 
 ```
 .
-├── app/                          # Code source de l'API
+├── app/                    # Code source de l'API
+│   ├── main.py            # API FastAPI
+│   ├── monitoring.py      # Monitoring Evidently AI
+│   ├── generate_ml.py     # Génération du modèle
+│   └── Dockerfile         # Configuration Docker
 ├── prometheus/
-│   └── prometheus.yml            # Configuration Prometheus
+│   └── prometheus.yml     # Configuration Prometheus
 ├── grafana/
-│   ├── provisioning/             # Configuration Grafana
-│   └── config.monitoring         # Variables d'environnement Grafana
-├── monitoring_ml/                # Scripts de monitoring ML
-│   ├── api_wine.ipynb            # Notebook pour l'API Wine
-│   ├── file2.html                # Rapport Evidently AI
-│   └── o_drift.html              # Rapport de dérive Evidently AI
-├── requirements.txt              # Dépendances Python
-├── docker-compose.yml            # Orchestration des services
-└── README.md                     # Documentation
+│   ├── provisioning/      # Configuration Grafana
+│   └── config.monitoring  # Variables d'environnement
+├── docker-compose.yml     # Orchestration des services
+└── README.md
 ```
 
----
+## Prérequis
 
-## **Démarrage rapide**
+- Docker et Docker Compose
+- Python 3.11 ou supérieur (pour le développement local)
+
+## Installation
 
 1. **Cloner le dépôt** :
-   ```bash
-   git clone <url_du_depot>
-   cd <nom_du_depot>
-   ```
-
-2. **Créer et activer un environnement Python** :
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # Sous Windows : .\venv\Scripts\activate
-   ```
-
-3. **Installer les dépendances** :
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Lancer les services** :
-   ```bash
-   docker-compose up -d
-   ```
-
-5. **Accéder aux services** :
-   - **API FastAPI** : [http://localhost:8000/docs](http://localhost:8000/docs)
-   - **Prometheus** : [http://localhost:9090](http://localhost:9090)
-   - **Grafana** : [http://localhost:3000](http://localhost:3000)
-     - Identifiants par défaut : `admin` / `admin`
-
-6. **Exécuter le Notebook `api_wine.ipynb`** :
-   - Lancer Jupyter Notebook :
-     ```bash
-     jupyter notebook
-     ```
-   - Ouvrir le fichier `monitoring_ml/api_wine.ipynb` et exécuter les cellules.
-
----
-
-## **Fonctionnalités**
-
-### **1. API FastAPI**
-
-L'API fournit un endpoint `/predict` pour générer des prédictions à partir d'un modèle de machine learning. 
-
-- **Endpoints disponibles** :
-  - `/predict` : Retourne une prédiction basée sur les données envoyées.
-  - `/metrics` : Expose des métriques collectées pour Prometheus.
-
-### **2. Prometheus**
-
-Prometheus collecte les métriques suivantes :
-- Nombre de requêtes API.
-- Temps de réponse moyen.
-- Taux d’erreurs (codes 4xx et 5xx).
-- Utilisation des ressources système (CPU, RAM, disque).
-
-Ces métriques sont configurées dans `prometheus/prometheus.yml`.
-
-### **3. Grafana**
-
-Grafana permet de visualiser les métriques collectées dans des tableaux de bord interactifs.
-
-- **Tableaux de bord disponibles** :
-  - **API Monitoring** :
-    - Répartition des requêtes (2xx, 4xx, 5xx).
-    - Temps de réponse moyen.
-    - Volume total de requêtes.
-  - **Infrastructure Monitoring** :
-    - Utilisation du CPU.
-    - Utilisation de la mémoire.
-    - Utilisation du disque.
-
-### **4. Evidently AI**
-
-Evidently AI analyse les performances du modèle et les dérives dans les données :
-- **Data Drift** : Comparaison des distributions des données d’entrée avec un jeu de référence.
-- **Performance Drift** : Suivi des performances du modèle (précision, F1-score, etc.).
-
-Un rapport Evidently est généré dans un fichier HTML :
 ```bash
-python generate_evidently_report.py
+git clone <url-du-repo>
+cd <nom-du-projet>
 ```
 
----
-
-## **Détails techniques**
-
-### **Docker Compose**
-
-Le fichier `docker-compose.yml` orchestre les services suivants :
-
-- **`app`** : Conteneur pour l’API FastAPI.
-- **`prometheus`** : Service de collecte des métriques.
-- **`grafana`** : Service de visualisation des métriques.
-- **`node-exporter`** : Service pour surveiller les ressources système.
-
-Pour vérifier les logs des services :
+2. **Lancer les services** :
 ```bash
-docker-compose logs -f <nom_du_service>
+docker-compose up --build
 ```
 
-### **Configuration Prometheus**
+## Services disponibles
 
-Le fichier `prometheus/prometheus.yml` contient :
-```yaml
-scrape_configs:
-  - job_name: 'app'
-    static_configs:
-      - targets: ['172.16.238.10:8000']
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['172.16.238.13:9100']
+- **API FastAPI** : http://localhost:8000
+  - Documentation Swagger : http://localhost:8000/docs
+  - Métriques Prometheus : http://localhost:8000/metrics
+- **Prometheus** : http://localhost:9090
+- **Grafana** : http://localhost:3000 (admin/admin)
+
+## Test de l'API
+
+Vous pouvez tester l'API via Swagger UI ou avec curl :
+
+```bash
+curl -X POST "http://localhost:8000/predict" \
+     -H "Content-Type: application/json" \
+     -d '{
+  "features": [
+    14.23,
+    1.71,
+    2.43,
+    15.6,
+    127.0,
+    2.80,
+    3.06,
+    0.28,
+    2.29,
+    5.64,
+    1.04,
+    3.92,
+    1065.0
+  ]
+}'
 ```
 
-### **Configuration Grafana**
+## Monitoring avec Grafana
 
-Les dashboards Grafana sont configurés dans `grafana/provisioning/`. Les métriques de Prometheus sont ajoutées comme source de données.
+Le dashboard Grafana inclut :
 
----
+![Dashboard Grafana](Dashboard%20Grafana.png)
 
-## **Tests et validation**
+### Métriques système
+- Utilisation CPU
+- Utilisation mémoire
+- Utilisation disque
 
-1. **Tester l'API** :
-   - Envoyer une requête à l'endpoint `/predict` avec un jeu de données.
-   ```bash
-   curl -X POST http://localhost:8000/predict -H "Content-Type: application/json" -d '{"feature1": 1.0, "feature2": 2.0}'
-   ```
+### Métriques API
+- Distribution des codes HTTP (2xx, 4xx, 5xx)
+- Temps de réponse moyen
+- Nombre de requêtes par seconde
 
-2. **Valider les métriques** :
-   - Accéder à Prometheus pour visualiser les métriques.
-   - Vérifier les tableaux de bord Grafana.
+### Métriques ML
+- Nombre de prédictions
+- Score de dérive des données
+- Distribution des prédictions
 
-3. **Générer un rapport Evidently** :
-   - Exécute le script de rapport :
-   ```bash
-   python generate_evidently_report.py
-   ```
+## Monitoring avec Evidently AI
 
-4. **Consulter les rapports Evidently** :
-   - Ouvre les fichiers `monitoring_ml/file2.html` et `monitoring_ml/o_drift.html` dans un navigateur pour visualiser les analyses.
-![Dashboard Grafana](<Dashboard Grafana.png>)
----
+Le projet utilise Evidently AI pour :
+- Détecter le data drift
+- Surveiller la qualité des prédictions
+- Générer des rapports de performance
 
-## **Astuces de dépannage**
+Les rapports sont générés automatiquement et accessibles via l'API.
 
-- **Problème : Les services ne démarrent pas** :
-  - Vérifie que Docker est bien installé et en cours d’exécution.
-  - Lance `docker-compose down && docker-compose up -d`.
+## Architecture technique
 
-- **Problème : Pas de données dans Grafana** :
-  - Vérifie la configuration Prometheus dans Grafana.
-  - Assure-toi que l’API génère des métriques sur `/metrics`.
+### API FastAPI
+- Endpoint `/predict` pour les prédictions
+- Intégration avec Prometheus pour les métriques
+- Monitoring en temps réel avec Evidently AI
 
----
+### Prometheus
+- Collecte des métriques système et API
+- Stockage temporel des données
+- Base pour les visualisations Grafana
 
-## **Ressources utiles**
+### Grafana
+- Tableaux de bord personnalisables
+- Visualisation en temps réel
+- Alertes configurables
 
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Prometheus Documentation](https://prometheus.io/docs/)
-- [Grafana Tutorials](https://grafana.com/tutorials/)
-- [Evidently AI Documentation](https://docs.evidentlyai.com/)
+## Développement local
 
----
+1. **Créer un environnement virtuel** :
+```bash
+python -m venv env
+source env/Scripts/activate  # Windows
+```
 
-## **Auteur**
+2. **Installer les dépendances** :
+```bash
+pip install -r requirements.txt
+```
 
-Projet réalisé par **Cyju3000**, équipe technique.
+3. **Générer le modèle** :
+```bash
+python app/generate_ml.py
+```
 
+## Contribution
+
+1. Fork le projet
+2. Créez votre branche (`git checkout -b feature/AmazingFeature`)
+3. Commit vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+## Licence
+
+Distribué sous la licence MIT. Voir `LICENSE` pour plus d'informations.
+
+## Génération des rapports Evidently AI
+
+Les rapports de monitoring ML sont générés via un endpoint dédié :
+
+```bash
+# Générer les rapports de data drift et stabilité
+curl -X POST "http://localhost:8000/generate_reports"
+```
+
+Deux rapports HTML sont générés dans le dossier `reports/` :
+- `data_drift_report.html` : Analyse des dérives dans les données
+- `data_stability_test.html` : Tests de stabilité des données
+
+Ces rapports permettent de :
+- Visualiser les changements dans la distribution des features
+- Détecter les anomalies dans les données
+- Suivre la stabilité du modèle dans le temps
+- Identifier les potentiels problèmes de qualité des données
+
+Pour visualiser les rapports, ouvrez les fichiers HTML générés dans votre navigateur.

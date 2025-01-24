@@ -11,6 +11,8 @@ services:
     networks:
       example-network:
         ipv4_address: 172.16.238.10
+    volumes:
+      - ./reports:/app/reports
 
   prometheus:
     image: prom/prometheus:latest
